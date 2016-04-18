@@ -1,6 +1,7 @@
 bvansomeren.lldpd
 =========
 
+https://travis-ci.org/bvansomeren/ansible-lldpd.svg?branch=master
 Installs LLDP on versions of Linux and FreeBSD. You probably want to learn why here: https://en.wikipedia.org/wiki/Link_Layer_Discovery_Protocol
 There is no real configuration required. By default this will emit the server name to the switches
 
