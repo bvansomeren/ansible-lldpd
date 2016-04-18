@@ -1,0 +1,6 @@
+---
+# defaults file for bvansomeren.lldpd
+lldp_service_name:
+      'FreeBSD': 'lldpd'
+      'RedHat': 'lldpad'
+      'Debian': 'lldpd'
