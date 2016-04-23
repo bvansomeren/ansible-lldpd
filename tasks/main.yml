@@ -1,16 +1,7 @@
 ---
 # tasks file for bvansomeren.lldpd
-- name: install lldpd for FreeBSD
-  pkgng: name=openlldp state=present
-  when: ansible_os_family == 'FreeBSD'
-
-- name: install lldpad for CentOS
-  yum: name=lldpad state=present
-  when: ansible_os_family == 'RedHat'
-
-- name: install lldpd for Debian based OS
-  apt: name=lldpd state=present
-  when: ansible_os_family == 'Debian'
+- name: ensure lldpd is installed
+  package: name="{{ lldp_package_name[ansible_os_family] }}" state=present
 
 - name: ensure lldpd is started and available at boot
   service: name="{{ lldp_service_name[ansible_os_family] }}" state=started enabled=yes
