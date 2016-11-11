@@ -1,7 +1,7 @@
 ---
 - name: restart lldpad
   service:
-    name: lldpad
+    name: "{{ lldp_service_name[ansible_os_family] }}"
     state: restarted
 
 # vim:ft=ansible:
