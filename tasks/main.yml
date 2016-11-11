@@ -6,3 +6,13 @@
 - name: ensure lldpd is started and available at boot
   service: name="{{ lldp_service_name[ansible_os_family] }}" state=started enabled=yes
 
+- name: transmit tlvs
+  command: "lldptool -i {{ item[0] }} -T -V {{ item[1].id }} enableTx={{ item[1].enableTx }}"
+  with_nested: 
+   - "{{ ansible_interfaces }}"
+   - "{{ lldp_tlvs }}"
+  when: 
+   - lldp_transmit_sysname 
+   - ansible_{{ item[0] }}['active'] == true 
+   - (ansible_{{ item[0] }}['type'] != "loopback" and ansible_{{ item[0] }}['type'] is defined)
+   - item[0] in lldp_sysname_interfaces
