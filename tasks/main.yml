@@ -2,6 +2,7 @@
 # tasks file for bvansomeren.lldpd
 - name: ensure lldpd is installed
   package: name="{{ lldp_package_name[ansible_os_family] }}" state=present
+  register: reg_lldpd_install_package
 
 - name: ensure lldpd is started and available at boot
   service: name="{{ lldp_service_name[ansible_os_family] }}" state=started enabled=yes
@@ -16,5 +17,6 @@
    - ansible_{{ item[0] }}['active'] == true 
    - (ansible_{{ item[0] }}['type'] != "loopback" and ansible_{{ item[0] }}['type'] is defined)
    - item[0] in lldp_sysname_interfaces
+   - reg_lldpd_install_package.changed
   notify:
    - restart lldpad
