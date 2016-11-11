@@ -1,0 +1,7 @@
+---
+- name: restart lldpad
+  service:
+    name: lldpad
+    state: restarted
+
+# vim:ft=ansible:

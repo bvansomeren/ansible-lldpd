@@ -16,3 +16,5 @@
    - ansible_{{ item[0] }}['active'] == true 
    - (ansible_{{ item[0] }}['type'] != "loopback" and ansible_{{ item[0] }}['type'] is defined)
    - item[0] in lldp_sysname_interfaces
+  notify:
+   - restart lldpad
