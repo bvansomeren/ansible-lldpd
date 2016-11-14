@@ -3,9 +3,11 @@
 - name: ensure lldpd is installed
   package: name="{{ lldp_package_name[ansible_os_family] }}" state=present
   register: reg_lldpd_install_package
+  when: lldp_enable
 
 - name: ensure lldpd is started and available at boot
   service: name="{{ lldp_service_name[ansible_os_family] }}" state=started enabled=yes
+  when: lldp_enable
 
 - name: transmit tlvs
   command: "lldptool -i {{ item[0] }} -T -V {{ item[1].id }} enableTx={{ item[1].enableTx }}"
@@ -13,6 +15,7 @@
    - "{{ ansible_interfaces }}"
    - "{{ lldp_tlvs }}"
   when: 
+   - lldp_enable
    - lldp_transmit_sysname 
    - ansible_{{ item[0] }}['active'] == true 
    - (ansible_{{ item[0] }}['type'] != "loopback" and ansible_{{ item[0] }}['type'] is defined)

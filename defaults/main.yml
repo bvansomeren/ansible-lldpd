@@ -1,5 +1,6 @@
 ---
 # defaults file for bvansomeren.lldpd
+lldp_enable: True
 lldp_package_name:
       'FreeBSD': 'openlldp'
       'RedHat': 'lldpad'

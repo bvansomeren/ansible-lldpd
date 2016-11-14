@@ -13,7 +13,7 @@ Pretty much none. Only useful for hardware deployments
 Role Variables
 --------------
 
-None at this point
+See defaults/main.yml
 
 Dependencies
 ------------
