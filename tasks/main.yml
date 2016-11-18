@@ -7,7 +7,7 @@
 - name: ensure lldpd is started and available at boot
   service: name="{{ lldp_service_name[ansible_os_family] }}" state=started enabled=yes
 
-- name: transmit tlvs
+- name: transmit tlvs with lldptool on RedHat
   command: "lldptool -i {{ item[0] }} -T -V {{ item[1].id }} enableTx={{ item[1].enableTx }}"
   with_nested: 
    - "{{ ansible_interfaces }}"
@@ -18,5 +18,6 @@
    - (ansible_{{ item[0] }}['type'] != "loopback" and ansible_{{ item[0] }}['type'] is defined)
    - item[0] in lldp_sysname_interfaces
    - reg_lldpd_install_package.changed
+   - ansible_os_family == "RedHat"
   notify:
    - restart lldpad
