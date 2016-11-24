@@ -3,11 +3,15 @@
 - name: ensure lldpd is installed
   package: name="{{ lldp_package_name[ansible_os_family] }}" state=present
   register: reg_lldpd_install_package
-  when: lldp_enable
+  when: 
+    - lldp_enable
+    - ansible_virtualization_role != "guest"
 
 - name: ensure lldpd is started and available at boot
   service: name="{{ lldp_service_name[ansible_os_family] }}" state=started enabled=yes
-  when: lldp_enable
+  when: 
+    - lldp_enable
+    - ansible_virtualization_role != "guest"
 
 - name: transmit tlvs with lldptool on RedHat
   command: "lldptool -i {{ item[0] }} -T -V {{ item[1].id }} enableTx={{ item[1].enableTx }}"
@@ -22,5 +26,6 @@
    - item[0] in lldp_sysname_interfaces
    - reg_lldpd_install_package.changed
    - ansible_os_family == "RedHat"
+   - ansible_virtualization_role != "guest"
   notify:
    - restart lldpad
