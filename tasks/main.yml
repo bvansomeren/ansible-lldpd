@@ -1,31 +1,36 @@
 ---
 # tasks file for bvansomeren.lldpd
 - name: ensure lldpd is installed
-  package: name="{{ lldp_package_name[ansible_os_family] }}" state=present
+  package: 
+    name: "{{ lldp_package_name[ansible_os_family] }}" 
+    state: present
   register: reg_lldpd_install_package
   when: 
     - lldp_enable
-    - ansible_virtualization_role != "guest"
+    - ansible_virtualization_role != "guest" or ansible_virtualization_role != "NA"
 
 - name: ensure lldpd is started and available at boot
-  service: name="{{ lldp_service_name[ansible_os_family] }}" state=started enabled=yes
+  service: 
+    name: "{{ lldp_service_name[ansible_os_family] }}" 
+    state: started 
+    enabled: yes
   when: 
     - lldp_enable
-    - ansible_virtualization_role != "guest"
+    - ansible_virtualization_role != "guest" or ansible_virtualization_role != "NA"
 
 - name: transmit tlvs with lldptool on RedHat
   command: "lldptool -i {{ item[0] }} -T -V {{ item[1].id }} enableTx={{ item[1].enableTx }}"
   with_nested: 
-   - "{{ ansible_interfaces }}"
-   - "{{ lldp_tlvs }}"
+    - "{{ ansible_interfaces }}"
+    - "{{ lldp_tlvs }}"
   when: 
-   - lldp_enable
-   - lldp_transmit_sysname 
-   - ansible_{{ item[0] }}['active'] == true 
-   - (ansible_{{ item[0] }}['type'] != "loopback" and ansible_{{ item[0] }}['type'] is defined)
-   - item[0] in lldp_sysname_interfaces
-   - reg_lldpd_install_package.changed
-   - ansible_os_family == "RedHat"
-   - ansible_virtualization_role != "guest"
+    - lldp_enable
+    - lldp_transmit_sysname 
+    - ansible_{{ item[0] }}['active'] == true 
+    - (ansible_{{ item[0] }}['type'] != "loopback" and ansible_{{ item[0] }}['type'] is defined)
+    - item[0] in lldp_sysname_interfaces
+    - reg_lldpd_install_package.changed
+    - ansible_os_family == "RedHat"
+    - ansible_virtualization_role != "guest" or ansible_virtualization_role != "NA"
   notify:
-   - restart lldpad
+    - restart lldpad
