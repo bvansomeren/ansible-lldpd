@@ -18,19 +18,19 @@
     - lldp_enable
     - ansible_virtualization_role != "guest" or ansible_virtualization_role != "NA"
 
-- name: transmit tlvs with lldptool on RedHat
+- name: transmit tlvs with lldptool on RedHat if we just installed lldpd
   command: "lldptool -i {{ item[0] }} -T -V {{ item[1].id }} enableTx={{ item[1].enableTx }}"
   with_nested: 
     - "{{ ansible_interfaces }}"
     - "{{ lldp_tlvs }}"
   when: 
-    - lldp_enable
-    - lldp_transmit_sysname 
-    - ansible_{{ item[0] }}['active'] == true 
-    - (ansible_{{ item[0] }}['type'] != "loopback" and ansible_{{ item[0] }}['type'] is defined)
-    - item[0] in lldp_sysname_interfaces
-    - reg_lldpd_install_package.changed
+    - lldp_enable # defaults to True
+    - lldp_transmit_sysname  # defaults to True
+    - ansible_{{ item[0] }}['active'] == true # only active interfaces
+    - (ansible_{{ item[0] }}['type'] != "loopback" and ansible_{{ item[0] }}['type'] is defined) # IB interfaces has no type with ansible 2.2
+    - item[0] in lldp_sysname_interfaces # this list only has "em1" by default
+    - reg_lldpd_install_package.changed # only set this once and when we just installed lldp
     - ansible_os_family == "RedHat"
-    - ansible_virtualization_role != "guest" or ansible_virtualization_role != "NA"
+    - ansible_virtualization_role != "guest" or ansible_virtualization_role != "NA" # not on virtual machines or where ansible can't detect
   notify:
     - restart lldpad
