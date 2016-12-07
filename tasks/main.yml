@@ -29,7 +29,7 @@
     - ansible_{{ item[0] }}['active'] == true # only active interfaces
     - (ansible_{{ item[0] }}['type'] != "loopback" and ansible_{{ item[0] }}['type'] is defined) # IB interfaces has no type with ansible 2.2
     - item[0] in lldp_sysname_interfaces # this list only has "em1" by default
-    - reg_lldpd_install_package.changed # only set this once and when we just installed lldp
+    - reg_lldpd_install_package.changed or lldp_sysname_force is defined # only when we just installed lldp or if lldp_sysname_force is defined
     - ansible_os_family == "RedHat"
     - ansible_virtualization_role != "guest" or ansible_virtualization_role != "NA" # not on virtual machines or where ansible can't detect
   notify:

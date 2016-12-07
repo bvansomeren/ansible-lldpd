@@ -13,6 +13,8 @@ lldp_service_name:
       
 #
 lldp_transmit_sysname: True
+# define lldp_sysname_force and we will not enable transmit of sysName when lldpd was just installed but every time
+# lldp_sysname_force: True
 lldp_sysname_interfaces: 
  - "{{ internal_interface | default('em1') }}"
 lldp_tlvs:
