@@ -35,3 +35,17 @@
     - ansible_virtualization_role != "guest" or ansible_virtualization_role != "NA" # not on virtual machines or where ansible can't detect
   notify:
     - restart lldpad
+
+# On bigger clusters lldpad leaks memory like crazy (hundreds of megabytes to gigabytes of memory per week)
+# Restart it weekly during the night
+- name: "Add cronjob to restart {{ lldp_service_name[ansible_os_family] }} every week"
+  cron:
+    name: Cronjob to restart memoryleaking lldpad
+    state: present
+    weekday: 1
+    minute: 20
+    hour: 0
+    job: "systemctl restart {{ lldp_service_name[ansible_os_family] }}"
+  when:
+    - lldp_autorestart
+
