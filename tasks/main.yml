@@ -17,6 +17,13 @@
   when: 
     - lldp_enable
     - ansible_virtualization_role != "guest" or ansible_virtualization_role != "NA"
+    - ansible_connection != 'chroot'
+
+- name: enable lldpd in chroot images
+  command: systemctl enable {{ lldp_service_name[ansible_os_family] }}
+  when:
+    - lldp_enable
+    - ansible_connection == 'chroot'
 
 - name: transmit tlvs with lldptool on RedHat if we just installed lldpd
   command: "/usr/sbin/lldptool -i {{ item[0] }} -T -V {{ item[1].id }} enableTx={{ item[1].enableTx }}"
@@ -33,6 +40,7 @@
     - reg_lldpd_install_package.changed or lldp_sysname_force is defined # only when we just installed lldp or if lldp_sysname_force is defined
     - ansible_os_family == "RedHat"
     - ansible_virtualization_role != "guest" or ansible_virtualization_role != "NA" # not on virtual machines or where ansible can't detect
+    - ansible_connection != 'chroot'
   notify:
     - restart lldpad
 

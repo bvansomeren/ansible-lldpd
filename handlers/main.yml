@@ -3,5 +3,6 @@
   service:
     name: "{{ lldp_service_name[ansible_os_family] }}"
     state: restarted
+  when: ansible_connection != 'chroot'
 
 # vim:ft=ansible:
