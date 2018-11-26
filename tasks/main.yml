@@ -33,9 +33,9 @@
   when: 
     - lldp_enable # defaults to True
     - lldp_transmit_sysname  # defaults to True
-    - (ansible_{{ item[0] }} is defined) # only if there are facts available for this interface
-    - (ansible_{{ item[0] }}['active'] == true) # only active interfaces
-    - (ansible_{{ item[0] }}['type'] != "loopback" and ansible_{{ item[0] }}['type'] is defined) # IB interfaces has no type with ansible 2.2
+    - vars['ansible_' ~ item[0]] is defined # only if there are facts available for this interface
+    - vars['ansible_' ~ item[0]]['active'] == true # only active interfaces
+    - vars['ansible_' ~ item[0]]['type'] != "loopback" and vars['ansible_' ~ item[0]]['type'] is defined # IB interfaces has no type with ansible 2.2
     - item[0] in lldp_sysname_interfaces # this list only has variable internal_interface or "em1" if that is not defined by default
     - reg_lldpd_install_package.changed or lldp_sysname_force is defined # only when we just installed lldp or if lldp_sysname_force is defined
     - ansible_os_family == "RedHat"
