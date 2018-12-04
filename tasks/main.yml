@@ -1,23 +1,59 @@
 ---
 # tasks file for bvansomeren.lldpd
 - name: ensure lldpd is installed
-  package: name="{{ lldp_package_name[ansible_os_family] }}" state=present
+  package: 
+    name: "{{ lldp_package_name[ansible_os_family] }}" 
+    state: present
   register: reg_lldpd_install_package
+  when: 
+    - lldp_enable
+    - ansible_virtualization_role != "guest" or ansible_virtualization_role != "NA"
 
 - name: ensure lldpd is started and available at boot
-  service: name="{{ lldp_service_name[ansible_os_family] }}" state=started enabled=yes
-
-- name: transmit tlvs with lldptool on RedHat
-  command: "lldptool -i {{ item[0] }} -T -V {{ item[1].id }} enableTx={{ item[1].enableTx }}"
-  with_nested: 
-   - "{{ ansible_interfaces }}"
-   - "{{ lldp_tlvs }}"
+  service: 
+    name: "{{ lldp_service_name[ansible_os_family] }}" 
+    state: started 
+    enabled: yes
   when: 
-   - lldp_transmit_sysname 
-   - ansible_{{ item[0] }}['active'] == true 
-   - (ansible_{{ item[0] }}['type'] != "loopback" and ansible_{{ item[0] }}['type'] is defined)
-   - item[0] in lldp_sysname_interfaces
-   - reg_lldpd_install_package.changed
-   - ansible_os_family == "RedHat"
+    - lldp_enable
+    - ansible_virtualization_role != "guest" or ansible_virtualization_role != "NA"
+    - ansible_connection != 'chroot'
+
+- name: enable lldpd in chroot images
+  command: systemctl enable {{ lldp_service_name[ansible_os_family] }}
+  when:
+    - lldp_enable
+    - ansible_connection == 'chroot'
+
+- name: transmit tlvs with lldptool on RedHat if we just installed lldpd
+  command: "/usr/sbin/lldptool -i {{ item[0] }} -T -V {{ item[1].id }} enableTx={{ item[1].enableTx }}"
+  with_nested: 
+    - "{{ ansible_interfaces|replace('.','') }}" # skip vlan interfaces
+    - "{{ lldp_tlvs }}"
+  when: 
+    - lldp_enable # defaults to True
+    - lldp_transmit_sysname  # defaults to True
+    - vars['ansible_' ~ item[0]] is defined # only if there are facts available for this interface
+    - vars['ansible_' ~ item[0]]['active'] == true # only active interfaces
+    - vars['ansible_' ~ item[0]]['type'] != "loopback" and vars['ansible_' ~ item[0]]['type'] is defined # IB interfaces has no type with ansible 2.2
+    - item[0] in lldp_sysname_interfaces # this list only has variable internal_interface or "em1" if that is not defined by default
+    - reg_lldpd_install_package.changed or lldp_sysname_force is defined # only when we just installed lldp or if lldp_sysname_force is defined
+    - ansible_os_family == "RedHat"
+    - ansible_virtualization_role != "guest" or ansible_virtualization_role != "NA" # not on virtual machines or where ansible can't detect
+    - ansible_connection != 'chroot'
   notify:
-   - restart lldpad
+    - restart lldpad
+
+# On bigger clusters lldpad leaks memory like crazy (hundreds of megabytes to gigabytes of memory per week)
+# Restart it weekly during the night
+- name: "Add cronjob to restart {{ lldp_service_name[ansible_os_family] }} every week"
+  cron:
+    name: Cronjob to restart memoryleaking lldpad
+    state: present
+    weekday: 1
+    minute: 20
+    hour: 0
+    job: "systemctl restart {{ lldp_service_name[ansible_os_family] }}"
+  when:
+    - lldp_autorestart
+
