@@ -6,7 +6,7 @@
     state: present
   register: reg_lldpd_install_package
   when: 
-    - lldp_enable
+    - lldp_enable|bool
     - ansible_virtualization_role != "guest" or ansible_virtualization_role != "NA"
 
 - name: ensure lldpd is started and available at boot
@@ -15,14 +15,14 @@
     state: started 
     enabled: yes
   when: 
-    - lldp_enable
+    - lldp_enable|bool
     - ansible_virtualization_role != "guest" or ansible_virtualization_role != "NA"
     - ansible_connection != 'chroot'
 
 - name: enable lldpd in chroot images
   command: systemctl enable {{ lldp_service_name[ansible_os_family] }}
   when:
-    - lldp_enable
+    - lldp_enable|bool
     - ansible_connection == 'chroot'
 
 - name: transmit tlvs with lldptool on RedHat if we just installed lldpd
@@ -31,8 +31,8 @@
     - "{{ ansible_interfaces|replace('.','') }}" # skip vlan interfaces
     - "{{ lldp_tlvs }}"
   when: 
-    - lldp_enable # defaults to True
-    - lldp_transmit_sysname  # defaults to True
+    - lldp_enable|bool # defaults to True
+    - lldp_transmit_sysname|bool  # defaults to True
     - vars['ansible_' ~ item[0]] is defined # only if there are facts available for this interface
     - vars['ansible_' ~ item[0]]['active'] == true # only active interfaces
     - vars['ansible_' ~ item[0]]['type'] != "loopback" and vars['ansible_' ~ item[0]]['type'] is defined # IB interfaces has no type with ansible 2.2
@@ -55,5 +55,5 @@
     hour: 0
     job: "systemctl restart {{ lldp_service_name[ansible_os_family] }}"
   when:
-    - lldp_autorestart
+    - lldp_autorestart|bool
 
