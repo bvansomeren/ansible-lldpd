@@ -28,7 +28,7 @@
 - name: transmit tlvs with lldptool on RedHat if we just installed lldpd
   command: "/usr/sbin/lldptool -i {{ item[0] }} -T -V {{ item[1].id }} enableTx={{ item[1].enableTx }}"
   with_nested: 
-    - "{{ ansible_interfaces|replace('.','') }}" # skip vlan interfaces
+    - "{{ ansible_interfaces|replace('.','')|regex_replace('_.*_','') }}" # skip vlan and alias interfaces
     - "{{ lldp_tlvs }}"
   when: 
     - lldp_enable # defaults to True
