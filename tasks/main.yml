@@ -28,14 +28,14 @@
 - name: transmit tlvs with lldptool on RedHat if we just installed lldpd
   command: "/usr/sbin/lldptool -i {{ item[0] }} -T -V {{ item[1].id }} enableTx={{ item[1].enableTx }}"
   with_nested: 
-    - "{{ ansible_interfaces|replace('.','') }}" # skip vlan interfaces
+    - "{{ ansible_interfaces|replace('.','')|regex_replace('_.*_','') }}" # skip vlan and alias interfaces
     - "{{ lldp_tlvs }}"
   when: 
     - lldp_enable|bool # defaults to True
     - lldp_transmit_sysname|bool  # defaults to True
     - vars['ansible_' ~ item[0]] is defined # only if there are facts available for this interface
     - vars['ansible_' ~ item[0]]['active'] == true # only active interfaces
-    - vars['ansible_' ~ item[0]]['type'] != "loopback" and vars['ansible_' ~ item[0]]['type'] is defined # IB interfaces has no type with ansible 2.2
+    - vars['ansible_' ~ item[0]]['type'] == "ether" # only for ethernet interfaces
     - item[0] in lldp_sysname_interfaces # this list only has variable internal_interface or "em1" if that is not defined by default
     - reg_lldpd_install_package.changed or lldp_sysname_force is defined # only when we just installed lldp or if lldp_sysname_force is defined
     - ansible_os_family == "RedHat"
