@@ -2,20 +2,21 @@
 # defaults file for bvansomeren.lldpd
 lldp_enable: true
 lldp_package_name:
-      'FreeBSD': 'openlldp'
-      'RedHat': 'lldpad'
-      'Debian': 'lldpd'
+  'FreeBSD': 'openlldp'
+  'RedHat': 'lldpad'
+  'Debian': 'lldpd'
 
 lldp_service_name:
-      'FreeBSD': 'lldpd'
-      'RedHat': 'lldpad'
-      'Debian': 'lldpd'
+  'FreeBSD': 'lldpd'
+  'RedHat': 'lldpad'
+  'Debian': 'lldpd'
 
 lldp_transmit_sysname: true
 # define lldp_sysname_force and we will not enable transmit of sysName when lldpd was just installed but every time
 # lldp_sysname_force: True
 lldp_sysname_interfaces:
   - "{{ internal_interface | default('em1') }}"
+
 lldp_tlvs:
   - { id: "sysName", enableTx: "yes" }
 
