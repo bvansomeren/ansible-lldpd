@@ -19,8 +19,9 @@
     enabled: true
   when:
     - lldp_enable
-    - ansible_virtualization_role != "guest" or ansible_virtualization_role != "NA"
-    - ansible_connection == "chroot"
+    - ansible_virtualization_role != "guest"
+    - ansible_virtualization_role != "NA"
+    - ansible_connection != "chroot"
 
 - name: Enable lldpd in chroot images
   ansible.builtin.command: systemctl enable {{ lldp_service_name[ansible_os_family] }}
