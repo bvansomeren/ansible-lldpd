@@ -1,36 +1,36 @@
 ---
 # tasks file for bvansomeren.lldpd
-- name: ensure lldpd is installed
-  package: 
-    name: "{{ lldp_package_name[ansible_os_family] }}" 
+- name: Ensure lldpd is installed
+  ansible.builtin.package:
+    name: "{{ lldp_package_name[ansible_os_family] }}"
     state: present
   register: reg_lldpd_install_package
-  when: 
+  when:
     - lldp_enable
     - ansible_virtualization_role != "guest" or ansible_virtualization_role != "NA"
 
-- name: ensure lldpd is started and available at boot
-  service: 
-    name: "{{ lldp_service_name[ansible_os_family] }}" 
-    state: started 
-    enabled: yes
-  when: 
+- name: Ensure lldpd is started and available at boot
+  ansible.builtin.service:
+    name: "{{ lldp_service_name[ansible_os_family] }}"
+    state: started
+    enabled: true
+  when:
     - lldp_enable
     - ansible_virtualization_role != "guest" or ansible_virtualization_role != "NA"
     - ansible_connection != 'chroot'
 
-- name: enable lldpd in chroot images
-  command: systemctl enable {{ lldp_service_name[ansible_os_family] }}
+- name: Enable lldpd in chroot images
+  ansible.builtin.command: systemctl enable {{ lldp_service_name[ansible_os_family] }}
   when:
     - lldp_enable
     - ansible_connection == 'chroot'
 
-- name: transmit tlvs with lldptool on RedHat if we just installed lldpd
-  command: "/usr/sbin/lldptool -i {{ item[0] }} -T -V {{ item[1].id }} enableTx={{ item[1].enableTx }}"
-  with_nested: 
-    - "{{ ansible_interfaces|replace('.','')|regex_replace('_.*_','') }}" # skip vlan and alias interfaces
+- name: Transmit tlvs with lldptool on RedHat if we just installed lldpd
+  ansible.builtin.command: "/usr/sbin/lldptool -i {{ item[0] }} -T -V {{ item[1].id }} enableTx={{ item[1].enableTx }}"
+  with_nested:
+    - "{{ ansible_interfaces | replace('.', '') | regex_replace('_.*_', '') }}" # skip vlan and alias interfaces
     - "{{ lldp_tlvs }}"
-  when: 
+  when:
     - lldp_enable # defaults to True
     - lldp_transmit_sysname  # defaults to True
     - vars['ansible_' ~ item[0]] is defined # only if there are facts available for this interface
@@ -46,8 +46,8 @@
 
 # On bigger clusters lldpad leaks memory like crazy (hundreds of megabytes to gigabytes of memory per week)
 # Restart it weekly during the night
-- name: "Add cronjob to restart {{ lldp_service_name[ansible_os_family] }} every week"
-  cron:
+- name: "Add weekly cronjob to restart {{ lldp_service_name[ansible_os_family] }}"
+  ansible.builtin.cron:
     name: Cronjob to restart memoryleaking lldpad
     state: present
     weekday: 1
@@ -56,4 +56,3 @@
     job: "systemctl restart {{ lldp_service_name[ansible_os_family] }}"
   when:
     - lldp_autorestart
-
