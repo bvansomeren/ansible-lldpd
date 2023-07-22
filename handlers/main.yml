@@ -1,6 +1,27 @@
 ---
-- name: restart lldpad
-  service:
+- name: Transmit tlvs with lldptool on RedHat if we just installed lldpd
+  ansible.builtin.command: "/usr/sbin/lldptool -i {{ item[0] }} -T -V {{ item[1].id }} enableTx={{ item[1].enableTx }}"
+  changed_when: true
+  with_nested:
+    - "{{ ansible_interfaces | replace('.', '') | regex_replace('_.*_', '') }}" # skip vlan and alias interfaces
+    - "{{ lldp_tlvs }}"
+  when:
+    - lldp_enable # defaults to true
+    - lldp_transmit_sysname  # defaults to true
+    - vars['ansible_' ~ item[0]] is defined # only if there are facts available for this interface
+    - vars['ansible_' ~ item[0]]['active'] == true # only active interfaces
+    - vars['ansible_' ~ item[0]]['type'] == "ether" # only for ethernet interfaces
+    - item[0] in lldp_sysname_interfaces # this list only has variable internal_interface or "em1" if that is not defined by default
+    - reg_lldpd_install_package.changed or lldp_sysname_force is defined # only when we just installed lldp or if lldp_sysname_force is defined
+    - ansible_os_family == "RedHat"
+    - ansible_virtualization_role != "guest"  # not on virtual machines
+    - ansible_virtualization_role != "NA" # not on virtual machines or where ansible can't detect
+    - ansible_connection != "chroot"
+  notify:
+    - restart lldpad
+
+- name: Restart lldpad
+  ansible.builtin.service:
     name: "{{ lldp_service_name[ansible_os_family] }}"
     state: restarted
   when: ansible_connection != 'chroot'
